@@ -29,21 +29,6 @@ the [motion_tracking_controller](https://github.com/HybridRobotics/motion_tracki
 
 ## Installation
 
-```bash
-# these are for installing isaaclab 2.1.0, written by warner wu
-conda create -n beyondmimic python=3.10 -y
-conda activate beyondmimic
-pip install setuptools==69.5.1
-pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu118
-pip install 'isaacsim[all,extscache]==4.5.0' --extra-index-url https://pypi.nvidia.com
-pip install flatdict==4.0.1 --no-build-isolation
-cd ~
-git clone https://github.com/isaac-sim/IsaacLab.git
-cd IsaacLab
-git checkout v2.1.0
-./isaaclab.sh --install
-```
-
 - Install Isaac Lab v2.1.0 by following
   the [installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html). We recommend
   using the conda installation as it simplifies calling Python scripts from the terminal.
@@ -103,8 +88,12 @@ Note: The reference motion should be retargeted and use generalized coordinates 
 ```bash
 python scripts/csv_to_npz.py --input_file {motion_name}.csv --input_fps 30 --output_name {motion_name} --headless
 
-python scripts/csv_to_npz.py --input_file /home/warner/GMR/outputs/csv/carrying_bike_rack_g1.csv --input_fps 30 --output_name carrying_bike_rack_g1 --headless
+mkdir -p datasets/lafan1/g1
 
+curl -L -o datasets/lafan1/g1/walk1_subject1.csv \
+https://huggingface.co/datasets/lvhaidong/LAFAN1_Retargeting_Dataset/resolve/main/g1/walk1_subject1.csv
+
+WANDB_ENTITY=warnerwu-berkeley-org python scripts/csv_to_npz.py --input_file datasets/lafan1/g1/walk1_subject1.csv --input_fps 30 --output_name lafan1_g1_walk1_subject1 --headless
 ```
 
 This will automatically upload the processed motion file to the WandB registry with output name {motion_name}.
@@ -114,7 +103,7 @@ This will automatically upload the processed motion file to the WandB registry w
 ```bash
 python scripts/replay_npz.py --registry_name={your-organization}-org/wandb-registry-motions/{motion_name}
 
-python scripts/replay_npz.py --registry_name=warner0709-shanghai-ai-lab-org/wandb-registry-motions/carrying_bike_rack_g1
+python scripts/replay_npz.py --registry_name=warnerwu-berkeley-org/wandb-registry-motions/lafan1_g1_walk1_subject1
 ```
 
 - Debugging
@@ -130,9 +119,14 @@ python scripts/rsl_rl/train.py --task=Tracking-Flat-G1-v0 \
 --registry_name {your-organization}-org/wandb-registry-motions/{motion_name} \
 --headless --logger wandb --log_project_name {project_name} --run_name {run_name}
 
-python scripts/rsl_rl/train.py --task=Tracking-Flat-G1-v0 \
---registry_name warner0709-shanghai-ai-lab-org/wandb-registry-motions/carrying_bike_rack_g1 \
---headless --logger wandb --log_project_name carrying_bike_rack --run_name carrying_bike_rack_g1
+python scripts/rsl_rl/train.py \
+  --task=Tracking-Flat-G1-v0 \
+  --registry_name=warnerwu-berkeley-org/wandb-registry-motions/lafan1_g1_walk1_subject1 \
+  --logger=wandb \
+  --log_project_name=beyondmimic_lafan1 \
+  --run_name=lafan1_g1_walk1_subject1 \
+  --num_envs=4096 \
+  --headless
 ```
 
 ### Policy Evaluation
@@ -141,8 +135,6 @@ python scripts/rsl_rl/train.py --task=Tracking-Flat-G1-v0 \
 
 ```bash
 python scripts/rsl_rl/play.py --task=Tracking-Flat-G1-v0 --num_envs=2 --wandb_path={wandb-run-path}
-
-python scripts/rsl_rl/play.py --task=Tracking-Flat-G1-v0 --num_envs=2 --wandb_path=warner0709-shanghai-ai-lab/carrying_bike_rack/{run-id}
 ```
 
 The WandB run path can be located in the run overview. It follows the format {your_organization}/{project_name}/ along

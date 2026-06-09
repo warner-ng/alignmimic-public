@@ -10,6 +10,7 @@
 """Launch Isaac Sim Simulator first."""
 
 import argparse
+import os
 import numpy as np
 
 from isaaclab.app import AppLauncher
@@ -303,12 +304,18 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene, joi
             import wandb
 
             COLLECTION = args_cli.output_name
-            run = wandb.init(project="csv_to_npz", name=COLLECTION)
-            print(f"[INFO]: Logging motion to wandb: {COLLECTION}")
+            entity = os.environ.get("WANDB_ENTITY")
+            if not entity:
+                raise RuntimeError("Set WANDB_ENTITY to your W&B team/entity before uploading motion artifacts.")
+            run = wandb.init(entity=entity, project="csv_to_npz", name=COLLECTION)
+            print(f"[INFO]: Logging motion to wandb: {entity}/{COLLECTION}")
             REGISTRY = "motions"
-            logged_artifact = run.log_artifact(artifact_or_path="/tmp/motion.npz", name=COLLECTION, type=REGISTRY)
-            run.link_artifact(artifact=logged_artifact, target_path=f"wandb-registry-{REGISTRY}/{COLLECTION}")
+            run.log_artifact(artifact_or_path="/tmp/motion.npz", name=COLLECTION, type=REGISTRY)
+            run.finish()
+            artifact = wandb.Api().artifact(f"{entity}/csv_to_npz/{COLLECTION}:latest", type=REGISTRY)
+            artifact.link(target_path=f"wandb-registry-{REGISTRY}/{COLLECTION}")
             print(f"[INFO]: Motion saved to wandb registry: {REGISTRY}/{COLLECTION}")
+            break
 
 
 def main():
