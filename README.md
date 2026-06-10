@@ -104,6 +104,8 @@ This will automatically upload the processed motion file to the WandB registry w
 python scripts/replay_npz.py --registry_name={your-organization}-org/wandb-registry-motions/{motion_name}
 
 python scripts/replay_npz.py --registry_name=warnerwu-berkeley-org/wandb-registry-motions/lafan1_g1_walk1_subject1
+
+./run_cari4d_bike_replay_npz.sh # replay the bike hoi 
 ```
 
 - Debugging
