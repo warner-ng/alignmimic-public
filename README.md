@@ -142,6 +142,27 @@ python scripts/rsl_rl/play.py \
   --task=Tracking-Flat-G1-v0 \
   --num_envs=2 \
   --wandb_path=warnerwu-berkeley/beyondmimic_lafan1/hwmxum3z
+
+# 以后会简化，现在有点丑，因为要refine数据里object的位置
+python scripts/rsl_rl/play.py \
+  --task=Tracking-Flat-G1-Bike-HOI-v0 \
+  --num_envs=1 \
+  --load_run=2026-06-10_00-01-03_carrying_bike_rack_g1_hoi \
+  --checkpoint=model_500.pt \
+  --motion_file=/home/warner/_projects/whole_body_tracking/artifacts/Date03_Sub01_bike_May_31_19_34_g1/motion.npz \
+  --object_motion_file=/home/warner/_projects/ResMimic/assets/motions/Date03_Sub01_bike_May_31_19_34_object_upright_bikez_aligned.npz \
+  --object_scale=0.45 \
+  --object_root_z_bias=0.05 \
+  --object_root_pos_offset -0.65 -0.25 -0.1 \
+  --object_root_rot_offset_deg -90.0 60.0 -0.0 \
+  --human_root_rot_offset_deg 0.0 0.0 0.0 \
+  --motion_global_rot_offset_deg -85.0 90.0 0.0 \
+  --motion_global_pos_offset -3.0 0.0 1.0 \
+  --logger=tensorboard \
+  env.terminations.anchor_pos=null \
+  env.terminations.anchor_ori=null \
+  env.terminations.ee_body_pos=null \
+  env.terminations.object_far=null
 ```
 
 The WandB run path can be located in the run overview. It follows the format {your_organization}/{project_name}/ along

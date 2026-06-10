@@ -111,5 +111,5 @@ class G1FlatBikeHOIEnvCfg(G1FlatEnvCfg):
             params={"command_name": "motion", "scale": 10.0},
         )
         self.terminations.object_far = DoneTerm(
-            func=mdp.bad_object_point_cloud, params={"command_name": "motion", "threshold": 0.3}
+            func=mdp.bad_object_point_cloud, params={"command_name": "motion", "threshold": 3.0}
         )

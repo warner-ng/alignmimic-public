@@ -55,6 +55,7 @@ simulation_app = app_launcher.app
 """Rest everything follows."""
 
 import gymnasium as gym
+import glob
 import os
 import torch
 from datetime import datetime
@@ -99,13 +100,15 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # load the motion file from local path or the wandb registry
     registry_name = args_cli.registry_name
+    runner_registry_name = registry_name
     if args_cli.motion_file is not None:
         env_cfg.commands.motion.motion_file = args_cli.motion_file
-        registry_name = args_cli.motion_file
+        runner_registry_name = None
     else:
         assert registry_name is not None, "Either --motion_file or --registry_name must be provided."
         if ":" not in registry_name:  # Check if the registry name includes alias, if not, append ":latest"
             registry_name += ":latest"
+            runner_registry_name = registry_name
         import pathlib
 
         import wandb
@@ -165,7 +168,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # create runner from rsl-rl
     runner = OnPolicyRunner(
-        env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device, registry_name=registry_name
+        env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device, registry_name=runner_registry_name
     )
     # write git state to logs
     runner.add_git_repo_to_log(__file__)
@@ -185,6 +188,11 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # run training
     runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
+    if args_cli.video and args_cli.logger == "wandb":
+        import wandb
+
+        for video_path in glob.glob(os.path.join(log_dir, "videos", "train", "*.mp4")):
+            wandb.save(video_path, base_path=log_dir)
 
     # close the simulator
     env.close()
