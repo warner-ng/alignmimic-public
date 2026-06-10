@@ -20,6 +20,14 @@ parser.add_argument(
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--motion_file", type=str, default=None, help="Path to the motion file.")
+parser.add_argument("--object_motion_file", type=str, default=None, help="Path to the object motion npz file.")
+parser.add_argument("--object_scale", type=float, default=None, help="Scale for the HOI object asset and point cloud.")
+parser.add_argument("--object_root_z_bias", type=float, default=None, help="Z spawn bias for the HOI object.")
+parser.add_argument("--object_root_pos_offset", nargs=3, type=float, default=None, help="Local xyz offset for object root.")
+parser.add_argument("--object_root_rot_offset_deg", nargs=3, type=float, default=None, help="Local rpy offset for object root.")
+parser.add_argument("--human_root_rot_offset_deg", nargs=3, type=float, default=None, help="Root rpy offset for human motion.")
+parser.add_argument("--motion_global_rot_offset_deg", nargs=3, type=float, default=None, help="Pair-level global rpy offset.")
+parser.add_argument("--motion_global_pos_offset", nargs=3, type=float, default=None, help="Pair-level global xyz offset.")
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
@@ -67,6 +75,29 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     """Play with RSL-RL agent."""
     agent_cfg: RslRlOnPolicyRunnerCfg = cli_args.parse_rsl_rl_cfg(args_cli.task, args_cli)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
+    env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+
+    if args_cli.motion_file is not None:
+        print(f"[INFO]: Using motion file from CLI: {args_cli.motion_file}")
+        env_cfg.commands.motion.motion_file = args_cli.motion_file
+    if args_cli.object_motion_file is not None:
+        env_cfg.commands.motion.object_motion_file = args_cli.object_motion_file
+    if args_cli.object_scale is not None:
+        env_cfg.commands.motion.object_scale = args_cli.object_scale
+        if env_cfg.scene.object is not None:
+            env_cfg.scene.object.spawn.scale = (args_cli.object_scale, args_cli.object_scale, args_cli.object_scale)
+    if args_cli.object_root_z_bias is not None:
+        env_cfg.commands.motion.object_root_z_bias = args_cli.object_root_z_bias
+    if args_cli.object_root_pos_offset is not None:
+        env_cfg.commands.motion.object_root_pos_offset = tuple(args_cli.object_root_pos_offset)
+    if args_cli.object_root_rot_offset_deg is not None:
+        env_cfg.commands.motion.object_root_rot_offset_deg = tuple(args_cli.object_root_rot_offset_deg)
+    if args_cli.human_root_rot_offset_deg is not None:
+        env_cfg.commands.motion.human_root_rot_offset_deg = tuple(args_cli.human_root_rot_offset_deg)
+    if args_cli.motion_global_rot_offset_deg is not None:
+        env_cfg.commands.motion.motion_global_rot_offset_deg = tuple(args_cli.motion_global_rot_offset_deg)
+    if args_cli.motion_global_pos_offset is not None:
+        env_cfg.commands.motion.motion_global_pos_offset = tuple(args_cli.motion_global_pos_offset)
 
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
@@ -94,10 +125,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
         print(f"[INFO]: Loading model checkpoint from: {run_path}/{file}")
         resume_path = f"./logs/rsl_rl/temp/{file}"
-
-        if args_cli.motion_file is not None:
-            print(f"[INFO]: Using motion file from CLI: {args_cli.motion_file}")
-            env_cfg.commands.motion.motion_file = args_cli.motion_file
 
         art = next((a for a in wandb_run.used_artifacts() if a.type == "motions"), None)
         if art is None:
