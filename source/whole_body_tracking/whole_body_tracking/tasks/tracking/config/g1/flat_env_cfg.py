@@ -104,6 +104,7 @@ class G1FlatBikeHOIEnvCfg(G1FlatEnvCfg):
         self.observations.critic.object_root_state = ObsTerm(
             func=mdp.object_root_state_w, params={"command_name": "motion"}
         )
+        # point cloud reward, added from resmimic by warner
         self.rewards.motion_object_point_cloud = RewTerm(
             func=mdp.motion_object_point_cloud_error_exp,
             weight=2.0,

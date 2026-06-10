@@ -56,3 +56,8 @@ def bad_motion_body_pos_z_only(
     body_indexes = _get_body_indexes(command, body_names)
     error = torch.abs(command.body_pos_relative_w[:, body_indexes, -1] - command.robot_body_pos_w[:, body_indexes, -1])
     return torch.any(error > threshold, dim=-1)
+
+
+def bad_object_point_cloud(env: ManagerBasedRLEnv, command_name: str, threshold: float) -> torch.Tensor:
+    command: MotionCommand = env.command_manager.get_term(command_name)
+    return command.object_point_cloud_dist() > threshold

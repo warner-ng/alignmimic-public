@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -59,6 +59,8 @@ class MySceneCfg(InteractiveSceneCfg):
     )
     # robots
     robot: ArticulationCfg = MISSING
+    # optional HOI object
+    object: RigidObjectCfg | None = None
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
@@ -127,6 +129,7 @@ class ObservationsCfg:
         joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.5, n_max=0.5))
         actions = ObsTerm(func=mdp.last_action)
+        object_root_state = None
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -144,6 +147,7 @@ class ObservationsCfg:
         joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
         actions = ObsTerm(func=mdp.last_action)
+        object_root_state = None
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
@@ -248,6 +252,7 @@ class RewardsCfg:
             "threshold": 1.0,
         },
     )
+    motion_object_point_cloud = None
 
 
 @configclass
@@ -276,6 +281,7 @@ class TerminationsCfg:
             ],
         },
     )
+    object_far = None
 
 
 @configclass

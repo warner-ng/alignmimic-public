@@ -81,3 +81,8 @@ def motion_anchor_ori_b(env: ManagerBasedEnv, command_name: str) -> torch.Tensor
     )
     mat = matrix_from_quat(ori)
     return mat[..., :2].reshape(mat.shape[0], -1)
+
+
+def object_root_state_w(env: ManagerBasedEnv, command_name: str) -> torch.Tensor:
+    command: MotionCommand = env.command_manager.get_term(command_name)
+    return torch.cat([command.robot_object_root_pos_w, command.robot_object_root_quat_w], dim=-1)
