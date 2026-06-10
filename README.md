@@ -125,7 +125,7 @@ python scripts/rsl_rl/train.py \
   --logger=wandb \
   --log_project_name=beyondmimic_lafan1 \
   --run_name=lafan1_g1_walk1_subject1 \
-  --num_envs=4096 \
+  --num_envs=8192 \
   --headless
 ```
 
@@ -135,6 +135,11 @@ python scripts/rsl_rl/train.py \
 
 ```bash
 python scripts/rsl_rl/play.py --task=Tracking-Flat-G1-v0 --num_envs=2 --wandb_path={wandb-run-path}
+
+python scripts/rsl_rl/play.py \
+  --task=Tracking-Flat-G1-v0 \
+  --num_envs=2 \
+  --wandb_path=warnerwu-berkeley/beyondmimic_lafan1/hwmxum3z
 ```
 
 The WandB run path can be located in the run overview. It follows the format {your_organization}/{project_name}/ along

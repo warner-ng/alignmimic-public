@@ -24,7 +24,16 @@ parser.add_argument("--num_envs", type=int, default=None, help="Number of enviro
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
-parser.add_argument("--registry_name", type=str, required=True, help="The name of the wand registry.")
+parser.add_argument("--registry_name", type=str, default=None, help="The name of the wand registry.")
+parser.add_argument("--motion_file", type=str, default=None, help="Path to the human motion npz file.")
+parser.add_argument("--object_motion_file", type=str, default=None, help="Path to the object motion npz file.")
+parser.add_argument("--object_scale", type=float, default=None, help="Scale for the HOI object asset and point cloud.")
+parser.add_argument("--object_root_z_bias", type=float, default=None, help="Z spawn bias for the HOI object.")
+parser.add_argument("--object_root_pos_offset", nargs=3, type=float, default=None, help="Local xyz offset for object root.")
+parser.add_argument("--object_root_rot_offset_deg", nargs=3, type=float, default=None, help="Local rpy offset for object root.")
+parser.add_argument("--human_root_rot_offset_deg", nargs=3, type=float, default=None, help="Root rpy offset for human motion.")
+parser.add_argument("--motion_global_rot_offset_deg", nargs=3, type=float, default=None, help="Pair-level global rpy offset.")
+parser.add_argument("--motion_global_pos_offset", nargs=3, type=float, default=None, help="Pair-level global xyz offset.")
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -88,17 +97,40 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     env_cfg.seed = agent_cfg.seed
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
 
-    # load the motion file from the wandb registry
+    # load the motion file from local path or the wandb registry
     registry_name = args_cli.registry_name
-    if ":" not in registry_name:  # Check if the registry name includes alias, if not, append ":latest"
-        registry_name += ":latest"
-    import pathlib
+    if args_cli.motion_file is not None:
+        env_cfg.commands.motion.motion_file = args_cli.motion_file
+        registry_name = args_cli.motion_file
+    else:
+        assert registry_name is not None, "Either --motion_file or --registry_name must be provided."
+        if ":" not in registry_name:  # Check if the registry name includes alias, if not, append ":latest"
+            registry_name += ":latest"
+        import pathlib
 
-    import wandb
+        import wandb
 
-    api = wandb.Api()
-    artifact = api.artifact(registry_name)
-    env_cfg.commands.motion.motion_file = str(pathlib.Path(artifact.download()) / "motion.npz")
+        api = wandb.Api()
+        artifact = api.artifact(registry_name)
+        env_cfg.commands.motion.motion_file = str(pathlib.Path(artifact.download()) / "motion.npz")
+    if args_cli.object_motion_file is not None:
+        env_cfg.commands.motion.object_motion_file = args_cli.object_motion_file
+    if args_cli.object_scale is not None:
+        env_cfg.commands.motion.object_scale = args_cli.object_scale
+        if env_cfg.scene.object is not None:
+            env_cfg.scene.object.spawn.scale = (args_cli.object_scale, args_cli.object_scale, args_cli.object_scale)
+    if args_cli.object_root_z_bias is not None:
+        env_cfg.commands.motion.object_root_z_bias = args_cli.object_root_z_bias
+    if args_cli.object_root_pos_offset is not None:
+        env_cfg.commands.motion.object_root_pos_offset = tuple(args_cli.object_root_pos_offset)
+    if args_cli.object_root_rot_offset_deg is not None:
+        env_cfg.commands.motion.object_root_rot_offset_deg = tuple(args_cli.object_root_rot_offset_deg)
+    if args_cli.human_root_rot_offset_deg is not None:
+        env_cfg.commands.motion.human_root_rot_offset_deg = tuple(args_cli.human_root_rot_offset_deg)
+    if args_cli.motion_global_rot_offset_deg is not None:
+        env_cfg.commands.motion.motion_global_rot_offset_deg = tuple(args_cli.motion_global_rot_offset_deg)
+    if args_cli.motion_global_pos_offset is not None:
+        env_cfg.commands.motion.motion_global_pos_offset = tuple(args_cli.motion_global_pos_offset)
 
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
