@@ -34,6 +34,12 @@ parser.add_argument("--object_root_rot_offset_deg", nargs=3, type=float, default
 parser.add_argument("--human_root_rot_offset_deg", nargs=3, type=float, default=None, help="Root rpy offset for human motion.")
 parser.add_argument("--motion_global_rot_offset_deg", nargs=3, type=float, default=None, help="Pair-level global rpy offset.")
 parser.add_argument("--motion_global_pos_offset", nargs=3, type=float, default=None, help="Pair-level global xyz offset.")
+parser.add_argument(
+    "--start_at_zero_on_resample",
+    action="store_true",
+    default=False,
+    help="Reset motion to frame 0 instead of random resampling during training.",
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -134,6 +140,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         env_cfg.commands.motion.motion_global_rot_offset_deg = tuple(args_cli.motion_global_rot_offset_deg)
     if args_cli.motion_global_pos_offset is not None:
         env_cfg.commands.motion.motion_global_pos_offset = tuple(args_cli.motion_global_pos_offset)
+    env_cfg.commands.motion.start_at_zero_on_resample = args_cli.start_at_zero_on_resample
 
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)

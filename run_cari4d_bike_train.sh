@@ -191,43 +191,14 @@ PY
     source /mnt/projects_ext4/conda/miniconda3/etc/profile.d/conda.sh
     conda activate beyondmimic
 
-    ### ———————————— this is formal run —————————————————— ###
-    TRAIN_ARGS=(
-      scripts/rsl_rl/train.py
-      --task=Tracking-Flat-G1-Bike-HOI-v0
-      --motion_file "${HUMAN_MOTION}"
-      --object_motion_file "${OBJECT_MOTION}"
-      --num_envs "${NUM_ENVS}"
-      --headless
-      --logger "${LOGGER}"
-      --log_project_name "${LOG_PROJECT_NAME}"
-      --run_name "${RUN_NAME}"
-      --object_scale "${OBJECT_SCALE}"
-      --object_root_z_bias "${OBJECT_SPAWN_Z_BIAS}"
-      --object_root_pos_offset "${OBJECT_ROOT_POS_OFFSET_X}" "${OBJECT_ROOT_POS_OFFSET_Y}" "${OBJECT_ROOT_POS_OFFSET_Z}"
-      --object_root_rot_offset_deg "${OBJECT_ROOT_ROT_ROLL_DEG}" "${OBJECT_ROOT_ROT_PITCH_DEG}" "${OBJECT_ROOT_ROT_YAW_DEG}"
-      --human_root_rot_offset_deg "${HUMAN_ROOT_ROT_ROLL_DEG}" "${HUMAN_ROOT_ROT_PITCH_DEG}" "${HUMAN_ROOT_ROT_YAW_DEG}"
-      --motion_global_rot_offset_deg "${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG}" "${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG}" "${HUMAN_OBJECT_ROOT_ROT_YAW_DEG}"
-      --motion_global_pos_offset "${HUMAN_OBJECT_ROOT_TRANS_X}" "${HUMAN_OBJECT_ROOT_TRANS_Y}" "${HUMAN_OBJECT_ROOT_TRANS_Z}"
-    )
-    ### ———————————— this is formal run —————————————————— ###
-    if [[ "${RECORD_VIDEO}" == "1" ]]; then
-      TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
-    fi
-  
-
-
-
-
-
-    # ### ———————————— this is experiment run —————————————————— ###
-    #     TRAIN_ARGS=(
+    # ### ———————————— this is formal run —————————————————— ###
+    # TRAIN_ARGS=(
     #   scripts/rsl_rl/train.py
     #   --task=Tracking-Flat-G1-Bike-HOI-v0
     #   --motion_file "${HUMAN_MOTION}"
     #   --object_motion_file "${OBJECT_MOTION}"
-    #   --num_envs 1
-
+    #   --num_envs "${NUM_ENVS}"
+    #   --headless
     #   --logger "${LOGGER}"
     #   --log_project_name "${LOG_PROJECT_NAME}"
     #   --run_name "${RUN_NAME}"
@@ -239,13 +210,42 @@ PY
     #   --motion_global_rot_offset_deg "${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG}" "${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG}" "${HUMAN_OBJECT_ROOT_ROT_YAW_DEG}"
     #   --motion_global_pos_offset "${HUMAN_OBJECT_ROOT_TRANS_X}" "${HUMAN_OBJECT_ROOT_TRANS_Y}" "${HUMAN_OBJECT_ROOT_TRANS_Z}"
     # )
-    #   if [[ "${RECORD_VIDEO}" == "1" ]]; then
-    #   TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
-    # fi
-    # TRAIN_ARGS+=(
-    #   env.terminations.object_far=null
-    # )
-    # ### ———————————— this is experiment run —————————————————— ###
+    # ### ———————————— this is formal run —————————————————— ###
+    if [[ "${RECORD_VIDEO}" == "1" ]]; then
+      TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
+    fi
+  
+
+
+
+
+
+    ### ———————————— this is experiment run —————————————————— ###
+        TRAIN_ARGS=(
+      scripts/rsl_rl/train.py
+      --task=Tracking-Flat-G1-Bike-HOI-v0
+      --motion_file "${HUMAN_MOTION}"
+      --object_motion_file "${OBJECT_MOTION}"
+      --num_envs 1
+
+      --logger "${LOGGER}"
+      --log_project_name "${LOG_PROJECT_NAME}"
+      --run_name "${RUN_NAME}"
+      --object_scale "${OBJECT_SCALE}"
+      --object_root_z_bias "${OBJECT_SPAWN_Z_BIAS}"
+      --object_root_pos_offset "${OBJECT_ROOT_POS_OFFSET_X}" "${OBJECT_ROOT_POS_OFFSET_Y}" "${OBJECT_ROOT_POS_OFFSET_Z}"
+      --object_root_rot_offset_deg "${OBJECT_ROOT_ROT_ROLL_DEG}" "${OBJECT_ROOT_ROT_PITCH_DEG}" "${OBJECT_ROOT_ROT_YAW_DEG}"
+      --human_root_rot_offset_deg "${HUMAN_ROOT_ROT_ROLL_DEG}" "${HUMAN_ROOT_ROT_PITCH_DEG}" "${HUMAN_ROOT_ROT_YAW_DEG}"
+      --motion_global_rot_offset_deg "${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG}" "${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG}" "${HUMAN_OBJECT_ROOT_ROT_YAW_DEG}"
+      --motion_global_pos_offset "${HUMAN_OBJECT_ROOT_TRANS_X}" "${HUMAN_OBJECT_ROOT_TRANS_Y}" "${HUMAN_OBJECT_ROOT_TRANS_Z}"
+    )
+      if [[ "${RECORD_VIDEO}" == "1" ]]; then
+      TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
+    fi
+    TRAIN_ARGS+=(
+      env.terminations.object_far=null
+    )
+    ### ———————————— this is experiment run —————————————————— ###
 
 
     if [[ -n "${MAX_ITERATIONS}" ]]; then
