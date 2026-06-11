@@ -28,6 +28,13 @@ parser.add_argument("--object_root_rot_offset_deg", nargs=3, type=float, default
 parser.add_argument("--human_root_rot_offset_deg", nargs=3, type=float, default=None, help="Root rpy offset for human motion.")
 parser.add_argument("--motion_global_rot_offset_deg", nargs=3, type=float, default=None, help="Pair-level global rpy offset.")
 parser.add_argument("--motion_global_pos_offset", nargs=3, type=float, default=None, help="Pair-level global xyz offset.")
+parser.add_argument("--play_episode_length_s", type=float, default=8.0, help="Episode length in seconds during play.")
+parser.add_argument(
+    "--keep_play_terminations",
+    action="store_true",
+    default=False,
+    help="Keep task early-termination checks during play instead of disabling them.",
+)
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
@@ -76,6 +83,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     agent_cfg: RslRlOnPolicyRunnerCfg = cli_args.parse_rsl_rl_cfg(args_cli.task, args_cli)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+    env_cfg.episode_length_s = args_cli.play_episode_length_s
 
     if args_cli.motion_file is not None:
         print(f"[INFO]: Using motion file from CLI: {args_cli.motion_file}")
@@ -98,6 +106,11 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         env_cfg.commands.motion.motion_global_rot_offset_deg = tuple(args_cli.motion_global_rot_offset_deg)
     if args_cli.motion_global_pos_offset is not None:
         env_cfg.commands.motion.motion_global_pos_offset = tuple(args_cli.motion_global_pos_offset)
+    env_cfg.commands.motion.start_at_zero_on_resample = True
+    if not args_cli.keep_play_terminations:
+        env_cfg.terminations.anchor_pos = None
+        env_cfg.terminations.anchor_ori = None
+        env_cfg.terminations.ee_body_pos = None
 
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)

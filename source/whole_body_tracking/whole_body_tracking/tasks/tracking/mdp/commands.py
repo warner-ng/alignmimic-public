@@ -444,7 +444,10 @@ class MotionCommand(CommandTerm):
     def _resample_command(self, env_ids: Sequence[int]):
         if len(env_ids) == 0:
             return
-        self._adaptive_sampling(env_ids)
+        if self.cfg.start_at_zero_on_resample:
+            self.time_steps[env_ids] = 0
+        else:
+            self._adaptive_sampling(env_ids)
 
         root_pos = self.body_pos_w[:, 0].clone()
         root_ori = self.body_quat_w[:, 0].clone()
@@ -603,6 +606,7 @@ class MotionCommandCfg(CommandTermCfg):
     human_root_rot_offset_deg: tuple[float, float, float] = (0.0, 0.0, 0.0)
     motion_global_rot_offset_deg: tuple[float, float, float] = (0.0, 0.0, 0.0)
     motion_global_pos_offset: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    start_at_zero_on_resample: bool = False
     anchor_body_name: str = MISSING
     body_names: list[str] = MISSING
 

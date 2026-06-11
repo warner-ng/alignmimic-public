@@ -76,7 +76,7 @@ RUNTIME_PAIR_LEVEL_TARGET_Z="${RUNTIME_PAIR_LEVEL_TARGET_Z:-0.0}"
 SHOW_GROUND="${SHOW_GROUND:-1}"
 
 RUN_MODE="${RUN_MODE:-all}" # all | viewer | train | retarget
-NUM_ENVS="${NUM_ENVS:-8192}"
+NUM_ENVS="${NUM_ENVS:-4096}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-}"
 LOGGER="${LOGGER:-wandb}"
 LOG_PROJECT_NAME="${LOG_PROJECT_NAME:-carrying_bike_rack}"
@@ -211,6 +211,9 @@ PY
       --motion_global_pos_offset "${HUMAN_OBJECT_ROOT_TRANS_X}" "${HUMAN_OBJECT_ROOT_TRANS_Y}" "${HUMAN_OBJECT_ROOT_TRANS_Z}"
     )
     ### ———————————— this is formal run —————————————————— ###
+    if [[ "${RECORD_VIDEO}" == "1" ]]; then
+      TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
+    fi
   
 
 
