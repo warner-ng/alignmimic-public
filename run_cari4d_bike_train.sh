@@ -84,6 +84,7 @@ RUN_NAME="${RUN_NAME:-carrying_bike_rack_g1_hoi}"
 RECORD_VIDEO="${RECORD_VIDEO:-1}"
 VIDEO_INTERVAL="${VIDEO_INTERVAL:-2000}"
 VIDEO_LENGTH="${VIDEO_LENGTH:-200}"
+START_AT_ZERO_ON_RESAMPLE="${START_AT_ZERO_ON_RESAMPLE:-0}"
 VIEWER_PORT="${VIEWER_PORT:-8080}"
 VIEWER_PORT_START="${VIEWER_PORT_START:-$VIEWER_PORT}"
 VIEWER_PORT_END="${VIEWER_PORT_END:-8099}"
@@ -102,6 +103,7 @@ echo "[INFO] OBJECT_MOTION=${OBJECT_MOTION}"
 echo "[INFO] object scale=${OBJECT_SCALE} rot=${OBJECT_ROOT_ROT_ROLL_DEG},${OBJECT_ROOT_ROT_PITCH_DEG},${OBJECT_ROOT_ROT_YAW_DEG} pos=${OBJECT_ROOT_POS_OFFSET_X},${OBJECT_ROOT_POS_OFFSET_Y},${OBJECT_ROOT_POS_OFFSET_Z}"
 echo "[INFO] pair rot=${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG},${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG},${HUMAN_OBJECT_ROOT_ROT_YAW_DEG} pos=${HUMAN_OBJECT_ROOT_TRANS_X},${HUMAN_OBJECT_ROOT_TRANS_Y},${HUMAN_OBJECT_ROOT_TRANS_Z}"
 echo "[INFO] human rot=${HUMAN_ROOT_ROT_ROLL_DEG},${HUMAN_ROOT_ROT_PITCH_DEG},${HUMAN_ROOT_ROT_YAW_DEG} spawn_z=${HUMAN_SPAWN_Z_BIAS} object_spawn_z=${OBJECT_SPAWN_Z_BIAS}"
+echo "[INFO] start_at_zero_on_resample=${START_AT_ZERO_ON_RESAMPLE}"
 echo "[INFO] object_far termination threshold=1.0; human tracking terminations remain enabled"
 
 viewer_port_in_use() {
@@ -239,6 +241,9 @@ PY
       --motion_global_rot_offset_deg "${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG}" "${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG}" "${HUMAN_OBJECT_ROOT_ROT_YAW_DEG}"
       --motion_global_pos_offset "${HUMAN_OBJECT_ROOT_TRANS_X}" "${HUMAN_OBJECT_ROOT_TRANS_Y}" "${HUMAN_OBJECT_ROOT_TRANS_Z}"
     )
+    if [[ "${START_AT_ZERO_ON_RESAMPLE}" == "1" ]]; then
+      TRAIN_ARGS+=(--start_at_zero_on_resample)
+    fi
       if [[ "${RECORD_VIDEO}" == "1" ]]; then
       TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
     fi
