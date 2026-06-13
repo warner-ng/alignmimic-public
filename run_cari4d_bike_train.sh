@@ -76,7 +76,7 @@ RUNTIME_PAIR_LEVEL_TARGET_Z="${RUNTIME_PAIR_LEVEL_TARGET_Z:-0.0}"
 SHOW_GROUND="${SHOW_GROUND:-1}"
 
 RUN_MODE="${RUN_MODE:-all}" # all | viewer | train | retarget
-NUM_ENVS="${NUM_ENVS:-4096}"
+NUM_ENVS="${NUM_ENVS:-8192}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-}"
 LOGGER="${LOGGER:-wandb}"
 LOG_PROJECT_NAME="${LOG_PROJECT_NAME:-carrying_bike_rack}"
@@ -84,7 +84,10 @@ RUN_NAME="${RUN_NAME:-carrying_bike_rack_g1_hoi}"
 RECORD_VIDEO="${RECORD_VIDEO:-1}"
 VIDEO_INTERVAL="${VIDEO_INTERVAL:-2000}"
 VIDEO_LENGTH="${VIDEO_LENGTH:-200}"
-START_AT_ZERO_ON_RESAMPLE="${START_AT_ZERO_ON_RESAMPLE:-0}"
+# whether or not load object (debug)
+DISABLE_OBJECT_LOADING="${DISABLE_OBJECT_LOADING:-0}"
+# 0 means no, 1 means from 1st frame
+START_AT_ZERO_ON_RESAMPLE="${START_AT_ZERO_ON_RESAMPLE:-1}" 
 VIEWER_PORT="${VIEWER_PORT:-8080}"
 VIEWER_PORT_START="${VIEWER_PORT_START:-$VIEWER_PORT}"
 VIEWER_PORT_END="${VIEWER_PORT_END:-8099}"
@@ -103,6 +106,7 @@ echo "[INFO] OBJECT_MOTION=${OBJECT_MOTION}"
 echo "[INFO] object scale=${OBJECT_SCALE} rot=${OBJECT_ROOT_ROT_ROLL_DEG},${OBJECT_ROOT_ROT_PITCH_DEG},${OBJECT_ROOT_ROT_YAW_DEG} pos=${OBJECT_ROOT_POS_OFFSET_X},${OBJECT_ROOT_POS_OFFSET_Y},${OBJECT_ROOT_POS_OFFSET_Z}"
 echo "[INFO] pair rot=${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG},${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG},${HUMAN_OBJECT_ROOT_ROT_YAW_DEG} pos=${HUMAN_OBJECT_ROOT_TRANS_X},${HUMAN_OBJECT_ROOT_TRANS_Y},${HUMAN_OBJECT_ROOT_TRANS_Z}"
 echo "[INFO] human rot=${HUMAN_ROOT_ROT_ROLL_DEG},${HUMAN_ROOT_ROT_PITCH_DEG},${HUMAN_ROOT_ROT_YAW_DEG} spawn_z=${HUMAN_SPAWN_Z_BIAS} object_spawn_z=${OBJECT_SPAWN_Z_BIAS}"
+echo "[INFO] disable_object_loading=${DISABLE_OBJECT_LOADING}"
 echo "[INFO] start_at_zero_on_resample=${START_AT_ZERO_ON_RESAMPLE}"
 echo "[INFO] object_far termination threshold=1.0; human tracking terminations remain enabled"
 
@@ -128,16 +132,17 @@ find_available_tcp_port() {
 case "${RUN_MODE}" in
   all)
     echo "[INFO] launching viewer in background..."
-    RUN_MODE=viewer bash "$ROOT_DIR/run_cari4d_bike_resmimic.sh" &
+    RUN_MODE=viewer bash "$ROOT_DIR/run_cari4d_bike_train.sh" &
     VIEWER_PID=$!
     echo "[INFO] viewer pid=${VIEWER_PID}"
     echo "[INFO] launching IsaacLab training..."
-    RUN_MODE=train bash "$ROOT_DIR/run_cari4d_bike_resmimic.sh"
+    RUN_MODE=train bash "$ROOT_DIR/run_cari4d_bike_train.sh"
     ;;
   retarget)
     [[ -f "$RESMIMIC_ROOT/source_dev_setup.sh" ]] || { echo "[ERROR] missing $RESMIMIC_ROOT/source_dev_setup.sh" >&2; exit 1; }
     [[ -f "$RESMIMIC_ROOT/scripts/export_cari4d_intermediate.py" ]] || { echo "[ERROR] missing export_cari4d_intermediate.py" >&2; exit 1; }
     [[ -f "$RESMIMIC_ROOT/scripts/retarget_smplx_to_resmimic.py" ]] || { echo "[ERROR] missing retarget_smplx_to_resmimic.py" >&2; exit 1; }
+    [[ -f "$RESMIMIC_ROOT/scripts/export_beyondmimic_motion_npz.py" ]] || { echo "[ERROR] missing export_beyondmimic_motion_npz.py" >&2; exit 1; }
     [[ -f "$CARI4D_PTH" ]] || { echo "[ERROR] missing CARI4D_PTH=$CARI4D_PTH" >&2; exit 1; }
     [[ -x "$CARI4D_PYTHON" ]] || { echo "[ERROR] CARI4D_PYTHON is not executable: $CARI4D_PYTHON" >&2; exit 1; }
     [[ -x "$GMR_PYTHON" ]] || { echo "[ERROR] GMR_PYTHON is not executable: $GMR_PYTHON" >&2; exit 1; }
@@ -154,7 +159,7 @@ PY
     fi
     export PYTHONPATH="$RESMIMIC_ROOT/legged_gym:${PYTHONPATH:-}"
 
-    echo "[1/4] CARI4D pth -> smplx/object intermediate"
+    echo "[1/5] CARI4D pth -> smplx/object intermediate"
     "$CARI4D_PYTHON" "$RESMIMIC_ROOT/scripts/export_cari4d_intermediate.py" \
       --cari4d_pth "$CARI4D_PTH" \
       --split "$SPLIT" \
@@ -164,7 +169,7 @@ PY
       --motion_dir "$MOTION_DIR" \
       --pair_suffix "$PAIR_SUFFIX"
 
-    echo "[2/4] GMR smplx -> ResMimic G1 pkl"
+    echo "[2/5] GMR smplx -> ResMimic G1 pkl"
     "$GMR_PYTHON" "$RESMIMIC_ROOT/scripts/retarget_smplx_to_resmimic.py" \
       --tag "$TAG" \
       --robot unitree_g1 \
@@ -174,7 +179,7 @@ PY
       --motion_dir "$MOTION_DIR" \
       --pair_suffix "$PAIR_SUFFIX"
 
-    echo "[3/4] verify paired motion"
+    echo "[3/5] verify paired motion"
     [[ -f "$PRE_HUMAN" ]] || { echo "[ERROR] missing $PRE_HUMAN" >&2; exit 1; }
     [[ -f "$HUMAN_PAIR" ]] || { echo "[ERROR] missing $HUMAN_PAIR" >&2; exit 1; }
     [[ -f "$OBJECT_PAIR" ]] || { echo "[ERROR] missing $OBJECT_PAIR" >&2; exit 1; }
@@ -183,17 +188,29 @@ PY
       --post-human "$HUMAN_PAIR" \
       --object "$OBJECT_PAIR"
 
-    echo "[4/4] copy paired motion to aligned names"
+    echo "[4/5] copy paired motion to aligned names"
     cp -f "$HUMAN_PAIR" "$ALIGNED_HUMAN"
     cp -f "$OBJECT_PAIR" "$ALIGNED_OBJECT"
     echo "[OK] aligned human: $ALIGNED_HUMAN"
     echo "[OK] aligned object: $ALIGNED_OBJECT"
+
+    echo "[5/5] export BeyondMimic motion.npz"
+    source /mnt/projects_ext4/conda/miniconda3/etc/profile.d/conda.sh
+    conda activate beyondmimic
+    python "$RESMIMIC_ROOT/scripts/export_beyondmimic_motion_npz.py" \
+      --human_pkl "$ALIGNED_HUMAN" \
+      --output "$HUMAN_MOTION" \
+      --whole_body_tracking_root "$ROOT_DIR" \
+      --root_quat_order xyzw \
+      --output_quat_order xyzw \
+      --headless
+    echo "[OK] BeyondMimic motion: $HUMAN_MOTION"
     ;;
   train)
     source /mnt/projects_ext4/conda/miniconda3/etc/profile.d/conda.sh
     conda activate beyondmimic
 
-    # ### ———————————— this is formal run —————————————————— ###
+    ### ———————————— this is formal run —————————————————— ###
     # TRAIN_ARGS=(
     #   scripts/rsl_rl/train.py
     #   --task=Tracking-Flat-G1-Bike-HOI-v0
@@ -212,7 +229,7 @@ PY
     #   --motion_global_rot_offset_deg "${HUMAN_OBJECT_ROOT_ROT_ROLL_DEG}" "${HUMAN_OBJECT_ROOT_ROT_PITCH_DEG}" "${HUMAN_OBJECT_ROOT_ROT_YAW_DEG}"
     #   --motion_global_pos_offset "${HUMAN_OBJECT_ROOT_TRANS_X}" "${HUMAN_OBJECT_ROOT_TRANS_Y}" "${HUMAN_OBJECT_ROOT_TRANS_Z}"
     # )
-    # ### ———————————— this is formal run —————————————————— ###
+    ### ———————————— this is formal run —————————————————— ###
     if [[ "${RECORD_VIDEO}" == "1" ]]; then
       TRAIN_ARGS+=(--video --video_interval "${VIDEO_INTERVAL}" --video_length "${VIDEO_LENGTH}")
     fi
@@ -255,6 +272,9 @@ PY
 
     if [[ -n "${MAX_ITERATIONS}" ]]; then
       TRAIN_ARGS+=(--max_iterations "${MAX_ITERATIONS}")
+    fi
+    if [[ "${DISABLE_OBJECT_LOADING}" == "1" ]]; then
+      TRAIN_ARGS+=(--disable_object_loading)
     fi
     python "${TRAIN_ARGS[@]}"
     ;;

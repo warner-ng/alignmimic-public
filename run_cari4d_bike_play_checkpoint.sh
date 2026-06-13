@@ -2,14 +2,17 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_SCRIPT="${CONFIG_SCRIPT:-$ROOT_DIR/run_cari4d_bike_resmimic.sh}"
-CHECKPOINT_PATH="${1:-${CHECKPOINT_PATH:-/home/warner/_projects/whole_body_tracking/logs/rsl_rl/g1_flat/2026-06-10_10-52-07_carrying_bike_rack_g1_hoi/model_1000.pt}}"
+CONFIG_SCRIPT="${CONFIG_SCRIPT:-$ROOT_DIR/run_cari4d_bike_train.sh}"
+CHECKPOINT_PATH="${1:-${CHECKPOINT_PATH:-/home/warner/_projects/whole_body_tracking/logs/rsl_rl/g1_flat/2026-06-11_21-56-50_carrying_bike_rack_g1_hoi/model_1500.pt}}"
 NUM_ENVS="${NUM_ENVS:-1}"
 TASK="${TASK:-Tracking-Flat-G1-Bike-HOI-v0}"
 LOGGER="${LOGGER:-tensorboard}"
 HEADLESS="${HEADLESS:-0}"
 VIDEO="${VIDEO:-0}"
 VIDEO_LENGTH="${VIDEO_LENGTH:-200}"
+
+# 这里负责关闭物体加载
+DISABLE_OBJECT_LOADING="${DISABLE_OBJECT_LOADING:-0}"
 
 [[ -f "$CONFIG_SCRIPT" ]] || { echo "[ERROR] missing CONFIG_SCRIPT=$CONFIG_SCRIPT" >&2; exit 1; }
 [[ -f "$CHECKPOINT_PATH" ]] || { echo "[ERROR] missing CHECKPOINT_PATH=$CHECKPOINT_PATH" >&2; exit 1; }
@@ -43,6 +46,10 @@ PLAY_ARGS=(
   env.terminations.ee_body_pos=null
   env.terminations.object_far=null
 )
+
+if [[ "$DISABLE_OBJECT_LOADING" == "1" ]]; then
+  PLAY_ARGS+=(--disable_object_loading)
+fi
 
 if [[ "$HEADLESS" == "1" ]]; then
   PLAY_ARGS+=(--headless)
