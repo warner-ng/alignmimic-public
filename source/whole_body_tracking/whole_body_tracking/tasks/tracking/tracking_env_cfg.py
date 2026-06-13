@@ -327,5 +327,7 @@ class TrackingEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15
         # viewer settings
         self.viewer.eye = (1.5, 1.5, 1.5)
-        self.viewer.origin_type = "asset_root"
+        # Use a static world-origin viewer so mouse camera edits are not overwritten every render step.
+        # self.viewer.origin_type = "asset_root"
+        self.viewer.origin_type = "world"
         self.viewer.asset_name = "robot"

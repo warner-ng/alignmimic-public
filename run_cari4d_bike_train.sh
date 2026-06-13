@@ -33,19 +33,19 @@ ALIGNED_OBJECT="$MOTION_DIR/${TAG}_object_upright_${PAIR_SUFFIX}_aligned.npz"
 # 红轴=X=roll，绿轴=Y=pitch，蓝轴=Z=yaw。
 #
 # object scale 统一缩放系数：同时作用于 IsaacLab 与 viser。
-OBJECT_SCALE="${OBJECT_SCALE:-0.45}"
+OBJECT_SCALE="${OBJECT_SCALE:-0.5}"
 
 # object 单独 rpy 旋转。
 # 沿 object root 当前局部轴旋转；内部取当前三根局部轴生成 axis-angle quaternion，不走 Euler 角。
-OBJECT_ROOT_ROT_ROLL_DEG="${OBJECT_ROOT_ROT_ROLL_DEG:--90.0}" # object 局部红轴 / X / roll
+OBJECT_ROOT_ROT_ROLL_DEG="${OBJECT_ROOT_ROT_ROLL_DEG:--110.0}" # object 局部红轴 / X / roll
 OBJECT_ROOT_ROT_PITCH_DEG="${OBJECT_ROOT_ROT_PITCH_DEG:-60.0}" # object 局部绿轴 / Y / pitch
-OBJECT_ROOT_ROT_YAW_DEG="${OBJECT_ROOT_ROT_YAW_DEG:--0.0}" # object 局部蓝轴 / Z / yaw
+OBJECT_ROOT_ROT_YAW_DEG="${OBJECT_ROOT_ROT_YAW_DEG:--20.0}" # object 局部蓝轴 / Z / yaw
 
 # object 单独 xyz 平移。
 # 沿 object root 的局部坐标轴平移；IsaacLab 和 viser 同时生效。
-OBJECT_ROOT_POS_OFFSET_X="${OBJECT_ROOT_POS_OFFSET_X:--0.65}" # object 局部红轴 / X
+OBJECT_ROOT_POS_OFFSET_X="${OBJECT_ROOT_POS_OFFSET_X:--0.5}" # object 局部红轴 / X
 OBJECT_ROOT_POS_OFFSET_Y="${OBJECT_ROOT_POS_OFFSET_Y:--0.25}" # object 局部绿轴 / Y
-OBJECT_ROOT_POS_OFFSET_Z="${OBJECT_ROOT_POS_OFFSET_Z:--0.15}" # object 局部蓝轴 / Z
+OBJECT_ROOT_POS_OFFSET_Z="${OBJECT_ROOT_POS_OFFSET_Z:--0.3}" # object 局部蓝轴 / Z
 
 # human + object 总体 rpy 旋转。
 # pair-level：绕世界坐标系同时旋转 human/object 的 root 位置和姿态。

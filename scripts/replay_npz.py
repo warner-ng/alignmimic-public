@@ -292,23 +292,7 @@ def _load_human_pkl(
     return root_pos, root_rot, dof_pos, dof_vel, local_body_pos, link_body_list
 
 
-@configclass
-class ReplayMotionsSceneCfg(InteractiveSceneCfg):
-    """Configuration for a replay motions scene."""
-
-    ground = AssetBaseCfg(prim_path="/World/defaultGroundPlane", spawn=sim_utils.GroundPlaneCfg())
-
-    sky_light = AssetBaseCfg(
-        prim_path="/World/skyLight",
-        spawn=sim_utils.DomeLightCfg(
-            intensity=750.0,
-            # texture_file=f"{ISAAC_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr",
-        ),
-    )
-
-    # articulation
-    robot: ArticulationCfg = G1_CYLINDER_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-    object_spawn_cfg = None
+def _make_object_spawn_cfg():
     object_file_scale = (args_cli.object_scale, args_cli.object_scale, args_cli.object_scale)
     object_collision_props = sim_utils.CollisionPropertiesCfg(
         collision_enabled=True,
@@ -325,14 +309,14 @@ class ReplayMotionsSceneCfg(InteractiveSceneCfg):
         max_depenetration_velocity=5.0,
     )
     if args_cli.object_usd is not None:
-        object_spawn_cfg = sim_utils.UsdFileCfg(
+        return sim_utils.UsdFileCfg(
             usd_path=args_cli.object_usd,
             scale=object_file_scale,
             collision_props=object_collision_props,
             rigid_props=object_rigid_props,
         )
-    elif args_cli.object_urdf is not None:
-        object_spawn_cfg = sim_utils.UrdfFileCfg(
+    if args_cli.object_urdf is not None:
+        return sim_utils.UrdfFileCfg(
             asset_path=args_cli.object_urdf,
             fix_base=False,
             merge_fixed_joints=True,
@@ -343,13 +327,35 @@ class ReplayMotionsSceneCfg(InteractiveSceneCfg):
             collision_props=object_collision_props,
             rigid_props=object_rigid_props,
         )
+    return None
+
+
+OBJECT_SPAWN_CFG = _make_object_spawn_cfg()
+
+
+@configclass
+class ReplayMotionsSceneCfg(InteractiveSceneCfg):
+    """Configuration for a replay motions scene."""
+
+    ground = AssetBaseCfg(prim_path="/World/defaultGroundPlane", spawn=sim_utils.GroundPlaneCfg())
+
+    sky_light = AssetBaseCfg(
+        prim_path="/World/skyLight",
+        spawn=sim_utils.DomeLightCfg(
+            intensity=750.0,
+            # texture_file=f"{ISAAC_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr",
+        ),
+    )
+
+    # articulation
+    robot: ArticulationCfg = G1_CYLINDER_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     object: RigidObjectCfg | None = (
         RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
             init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
-            spawn=object_spawn_cfg,
+            spawn=OBJECT_SPAWN_CFG,
         )
-        if object_spawn_cfg is not None
+        if OBJECT_SPAWN_CFG is not None
         else None
     )
 
@@ -568,8 +574,9 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
                 flush=True,
             )
 
-        pos_lookat = root_states[0, :3].cpu().numpy()
-        sim.set_camera_view(pos_lookat + np.array([2.0, 2.0, 0.5]), pos_lookat)
+        # Match train/play static world-origin viewer; do not overwrite mouse camera edits every frame.
+        # pos_lookat = root_states[0, :3].cpu().numpy()
+        # sim.set_camera_view(pos_lookat + np.array([2.0, 2.0, 0.5]), pos_lookat)
         frame_count += 1
         time_steps += 1
 
@@ -582,6 +589,7 @@ def main():
     scene_cfg = ReplayMotionsSceneCfg(num_envs=1, env_spacing=2.0)
     scene = InteractiveScene(scene_cfg)
     sim.reset()
+    sim.set_camera_view(np.array([1.5, 1.5, 1.5]), np.array([0.0, 0.0, 0.0]))
     # Run the simulator
     run_simulator(sim, scene)
 
