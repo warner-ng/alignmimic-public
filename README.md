@@ -138,7 +138,7 @@ python scripts/rsl_rl/train.py \
   --logger=wandb \
   --log_project_name=beyondmimic_lafan1 \
   --run_name=lafan1_g1_walk1_subject1 \
-  --num_envs=8192 \
+  --num_envs=4196 \
   --headless
 ```
 

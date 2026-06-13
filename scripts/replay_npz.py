@@ -315,8 +315,15 @@ class ReplayMotionsSceneCfg(InteractiveSceneCfg):
                 asset_path=args_cli.object_urdf,
                 fix_base=False,
                 merge_fixed_joints=True,
+                # Keep IsaacLab's default convex hull path; convex_decomposition can break PhysX scene creation.
+                # collider_type="convex_decomposition",
                 joint_drive=None,
                 scale=(args_cli.object_scale, args_cli.object_scale, args_cli.object_scale),
+                collision_props=sim_utils.CollisionPropertiesCfg(
+                    collision_enabled=True,
+                    contact_offset=0.02,
+                    rest_offset=0.0,
+                ),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     disable_gravity=False,
                     retain_accelerations=False,

@@ -20,6 +20,12 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
+parser.add_argument(
+    "--video_interval_iterations",
+    type=int,
+    default=None,
+    help="Interval between video recordings in learning iterations. Overrides --video_interval.",
+)
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
@@ -171,9 +177,25 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
     # wrap for video recording
     if args_cli.video:
+        video_interval = args_cli.video_interval
+        video_trigger_offset = 0
+        if args_cli.video_interval_iterations is not None:
+            video_interval = int(args_cli.video_interval_iterations) * int(agent_cfg.num_steps_per_env)
+            video_trigger_offset = max(0, video_interval - int(args_cli.video_length))
+
+        def video_step_trigger(step):
+            should_record = step % video_interval == video_trigger_offset
+            if should_record:
+                command = env.unwrapped.command_manager.get_term("motion")
+                env_ids = torch.tensor([0], device=command.device)
+                command.cfg.start_at_zero_on_resample = True
+                command._resample_command(env_ids)
+            return should_record
+
         video_kwargs = {
             "video_folder": os.path.join(log_dir, "videos", "train"),
-            "step_trigger": lambda step: step % args_cli.video_interval == 0,
+            # Original: "step_trigger": lambda step: step % video_interval == video_trigger_offset,
+            "step_trigger": video_step_trigger,
             "video_length": args_cli.video_length,
             "disable_logger": True,
         }
@@ -210,11 +232,12 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # run training
     runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
-    if args_cli.video and args_cli.logger == "wandb":
-        import wandb
-
-        for video_path in glob.glob(os.path.join(log_dir, "videos", "train", "*.mp4")):
-            wandb.save(video_path, base_path=log_dir)
+    # Video upload is handled inside MotionOnPolicyRunner.save(), so it runs at every save_interval.
+    # if args_cli.video and args_cli.logger == "wandb":
+    #     import wandb
+    #
+    #     for video_path in glob.glob(os.path.join(log_dir, "videos", "train", "*.mp4")):
+    #         wandb.save(video_path, base_path=log_dir)
 
     # close the simulator
     env.close()

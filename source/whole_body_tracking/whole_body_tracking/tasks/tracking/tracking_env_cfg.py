@@ -205,12 +205,12 @@ class RewardsCfg:
 
     motion_global_anchor_pos = RewTerm(
         func=mdp.motion_global_anchor_position_error_exp,
-        weight=0.5,
+        weight=5.0,
         params={"command_name": "motion", "std": 0.3},
     )
     motion_global_anchor_ori = RewTerm(
         func=mdp.motion_global_anchor_orientation_error_exp,
-        weight=0.5,
+        weight=2.0,
         params={"command_name": "motion", "std": 0.4},
     )
     motion_body_pos = RewTerm(
@@ -246,7 +246,10 @@ class RewardsCfg:
             "sensor_cfg": SceneEntityCfg(
                 "contact_forces",
                 body_names=[
-                    r"^(?!left_ankle_roll_link$)(?!right_ankle_roll_link$)(?!left_wrist_yaw_link$)(?!right_wrist_yaw_link$).+$"
+                    # Original: only feet and wrist yaw were allowed to contact.
+                    # r"^(?!left_ankle_roll_link$)(?!right_ankle_roll_link$)(?!left_wrist_yaw_link$)(?!right_wrist_yaw_link$).+$"
+                    # Allow shoulder/elbow contacts for bike handling while still penalizing torso/legs/head/etc.
+                    r"^(?!left_ankle_roll_link$)(?!right_ankle_roll_link$)(?!left_wrist_yaw_link$)(?!right_wrist_yaw_link$)(?!left_shoulder_pitch_link$)(?!left_shoulder_roll_link$)(?!left_shoulder_yaw_link$)(?!right_shoulder_pitch_link$)(?!right_shoulder_roll_link$)(?!right_shoulder_yaw_link$)(?!left_elbow_link$)(?!right_elbow_link$).+$"
                 ],
             ),
             "threshold": 1.0,

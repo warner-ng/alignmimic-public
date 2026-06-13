@@ -176,6 +176,18 @@ def build_scaled_urdf_copy(urdf_path: str, scale: float) -> str:
     src = Path(urdf_path).resolve()
     tree = ET.parse(src)
     root = tree.getroot()
+    scale = float(scale)
+
+    def scale_vec_text(text: str) -> str:
+        vals = [float(x) for x in text.split()]
+        vals = [v * scale for v in vals]
+        return " ".join(f"{v:.8g}" for v in vals)
+
+    for origin in root.findall(".//origin"):
+        xyz = origin.get("xyz")
+        if xyz:
+            origin.set("xyz", scale_vec_text(xyz))
+
     for mesh in root.findall(".//mesh"):
         filename = mesh.get("filename")
         if filename:
@@ -187,8 +199,23 @@ def build_scaled_urdf_copy(urdf_path: str, scale: float) -> str:
         if scale_text:
             parsed = [float(x) for x in scale_text.split()]
             vals = (parsed + parsed[-1:] * 3)[:3]
-        vals = [v * float(scale) for v in vals]
+        vals = [v * scale for v in vals]
         mesh.set("scale", f"{vals[0]:.8g} {vals[1]:.8g} {vals[2]:.8g}")
+    for box in root.findall(".//box"):
+        size = box.get("size")
+        if size:
+            box.set("size", scale_vec_text(size))
+    for sphere in root.findall(".//sphere"):
+        radius = sphere.get("radius")
+        if radius:
+            sphere.set("radius", f"{float(radius) * scale:.8g}")
+    for cylinder in root.findall(".//cylinder"):
+        radius = cylinder.get("radius")
+        length = cylinder.get("length")
+        if radius:
+            cylinder.set("radius", f"{float(radius) * scale:.8g}")
+        if length:
+            cylinder.set("length", f"{float(length) * scale:.8g}")
     tmp = tempfile.NamedTemporaryFile(prefix="bike_hoi_object_scaled_", suffix=".urdf", delete=False)
     tree.write(tmp.name, encoding="utf-8", xml_declaration=True)
     return tmp.name

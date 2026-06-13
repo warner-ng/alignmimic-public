@@ -26,7 +26,7 @@ class G1FlatEnvCfg(TrackingEnvCfg):
 
         self.scene.robot = G1_CYLINDER_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.actions.joint_pos.scale = G1_ACTION_SCALE
-        self.commands.motion.anchor_body_name = "torso_link"
+        self.commands.motion.anchor_body_name = "pelvis"
         self.commands.motion.body_names = [
             "pelvis",
             "left_hip_roll_link",
@@ -72,8 +72,15 @@ class G1FlatBikeHOIEnvCfg(G1FlatEnvCfg):
                 asset_path=BIKE_URDF,
                 fix_base=False,
                 merge_fixed_joints=True,
+                # Keep IsaacLab's default convex hull path; convex_decomposition can break PhysX scene creation.
+                # collider_type="convex_decomposition",
                 joint_drive=None,
                 scale=(0.6, 0.6, 0.6),
+                collision_props=sim_utils.CollisionPropertiesCfg(
+                    collision_enabled=True,
+                    contact_offset=0.02,
+                    rest_offset=0.0,
+                ),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     disable_gravity=False,
                     retain_accelerations=False,
@@ -106,11 +113,11 @@ class G1FlatBikeHOIEnvCfg(G1FlatEnvCfg):
         )
         # self.rewards.undesired_contacts = None
         # point cloud reward, added from resmimic by warner
-        # self.rewards.motion_object_point_cloud = RewTerm(
-        #     func=mdp.motion_object_point_cloud_error_exp,
-        #     weight=2.0,
-        #     params={"command_name": "motion", "scale": 10.0},
-        # )
+        self.rewards.motion_object_point_cloud = RewTerm(
+            func=mdp.motion_object_point_cloud_error_exp,
+            weight=2.0,
+            params={"command_name": "motion", "scale": 10.0},
+        )
         # self.rewards.motion_object_point_cloud = RewTerm(
         #     func=mdp.motion_object_point_cloud_error_exp,
         #     weight=0.0,

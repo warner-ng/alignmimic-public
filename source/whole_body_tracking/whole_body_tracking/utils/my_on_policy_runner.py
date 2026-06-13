@@ -1,4 +1,5 @@
 import os
+import glob
 
 from rsl_rl.env import VecEnv
 from rsl_rl.runners.on_policy_runner import OnPolicyRunner
@@ -27,6 +28,7 @@ class MotionOnPolicyRunner(OnPolicyRunner):
     ):
         super().__init__(env, train_cfg, log_dir, device)
         self.registry_name = registry_name
+        self._wandb_uploaded_videos = set()
 
     def save(self, path: str, infos=None):
         """Save the model and training information."""
@@ -44,3 +46,15 @@ class MotionOnPolicyRunner(OnPolicyRunner):
             if self.registry_name is not None:
                 wandb.run.use_artifact(self.registry_name)
                 self.registry_name = None
+
+            self._upload_new_videos_to_wandb()
+
+    def _upload_new_videos_to_wandb(self):
+        if self.log_dir is None:
+            return
+        video_dir = os.path.join(self.log_dir, "videos", "train")
+        for video_path in sorted(glob.glob(os.path.join(video_dir, "*.mp4"))):
+            if video_path in self._wandb_uploaded_videos:
+                continue
+            wandb.save(video_path, base_path=self.log_dir)
+            self._wandb_uploaded_videos.add(video_path)

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_SCRIPT="${CONFIG_SCRIPT:-$ROOT_DIR/run_cari4d_bike_train.sh}"
-CHECKPOINT_PATH="${1:-${CHECKPOINT_PATH:-/home/warner/_projects/whole_body_tracking/logs/rsl_rl/g1_flat/2026-06-11_21-56-50_carrying_bike_rack_g1_hoi/model_1500.pt}}"
+CHECKPOINT_PATH="${1:-${CHECKPOINT_PATH:-/home/warner/_projects/whole_body_tracking/logs/rsl_rl/g1_flat/2026-06-13_02-39-36_carrying_bike_rack_g1_hoi/model_500.pt}}"
 NUM_ENVS="${NUM_ENVS:-1}"
 TASK="${TASK:-Tracking-Flat-G1-Bike-HOI-v0}"
 LOGGER="${LOGGER:-tensorboard}"
