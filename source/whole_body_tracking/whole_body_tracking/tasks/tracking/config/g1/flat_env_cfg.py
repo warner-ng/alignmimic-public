@@ -12,6 +12,7 @@ import whole_body_tracking.tasks.tracking.mdp as mdp
 
 
 BIKE_URDF = "/home/warner/_projects/ResMimic/assets/bicycle_top_tube/bikered.urdf"
+BIKE_USD = "/home/warner/_projects/ResMimic/assets/bicycle_top_tube/bikered_rigid_compound.usd"
 BIKE_MESH = "/home/warner/_projects/ResMimic/assets/bikered.stl"
 BIKE_OBJECT_MOTION = (
     "/home/warner/_projects/ResMimic/assets/motions/"
@@ -68,13 +69,8 @@ class G1FlatBikeHOIEnvCfg(G1FlatEnvCfg):
         self.scene.object = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
             init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
-            spawn=sim_utils.UrdfFileCfg(
-                asset_path=BIKE_URDF,
-                fix_base=False,
-                merge_fixed_joints=True,
-                # Keep IsaacLab's default convex hull path; convex_decomposition can break PhysX scene creation.
-                # collider_type="convex_decomposition",
-                joint_drive=None,
+            spawn=sim_utils.UsdFileCfg(
+                usd_path=BIKE_USD,
                 scale=(0.6, 0.6, 0.6),
                 collision_props=sim_utils.CollisionPropertiesCfg(
                     collision_enabled=True,

@@ -24,6 +24,7 @@ parser.add_argument("--human_pkl", type=str, default=None, help="ResMimic-style 
 parser.add_argument("--motion_quat_order", choices=("wxyz", "xyzw"), default="wxyz", help="Human motion quaternion order.")
 parser.add_argument("--object_motion_file", type=str, default=None, help="Optional object motion .npz path.")
 parser.add_argument("--object_urdf", type=str, default=None, help="Optional object URDF path.")
+parser.add_argument("--object_usd", type=str, default=None, help="Optional object USD path.")
 parser.add_argument("--object_mesh", type=str, default=None, help="Optional object mesh path for pair leveling.")
 parser.add_argument("--object_scale", type=float, default=1.0, help="Object asset scale.")
 parser.add_argument("--object_mesh_scale", type=float, default=1.0, help="Object mesh scale for pair leveling.")
@@ -307,35 +308,48 @@ class ReplayMotionsSceneCfg(InteractiveSceneCfg):
 
     # articulation
     robot: ArticulationCfg = G1_CYLINDER_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    object_spawn_cfg = None
+    object_file_scale = (args_cli.object_scale, args_cli.object_scale, args_cli.object_scale)
+    object_collision_props = sim_utils.CollisionPropertiesCfg(
+        collision_enabled=True,
+        contact_offset=0.02,
+        rest_offset=0.0,
+    )
+    object_rigid_props = sim_utils.RigidBodyPropertiesCfg(
+        disable_gravity=False,
+        retain_accelerations=False,
+        linear_damping=0.0,
+        angular_damping=0.0,
+        max_linear_velocity=1000.0,
+        max_angular_velocity=1000.0,
+        max_depenetration_velocity=5.0,
+    )
+    if args_cli.object_usd is not None:
+        object_spawn_cfg = sim_utils.UsdFileCfg(
+            usd_path=args_cli.object_usd,
+            scale=object_file_scale,
+            collision_props=object_collision_props,
+            rigid_props=object_rigid_props,
+        )
+    elif args_cli.object_urdf is not None:
+        object_spawn_cfg = sim_utils.UrdfFileCfg(
+            asset_path=args_cli.object_urdf,
+            fix_base=False,
+            merge_fixed_joints=True,
+            # Keep IsaacLab's default convex hull path; convex_decomposition can break PhysX scene creation.
+            # collider_type="convex_decomposition",
+            joint_drive=None,
+            scale=object_file_scale,
+            collision_props=object_collision_props,
+            rigid_props=object_rigid_props,
+        )
     object: RigidObjectCfg | None = (
         RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
             init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
-            spawn=sim_utils.UrdfFileCfg(
-                asset_path=args_cli.object_urdf,
-                fix_base=False,
-                merge_fixed_joints=True,
-                # Keep IsaacLab's default convex hull path; convex_decomposition can break PhysX scene creation.
-                # collider_type="convex_decomposition",
-                joint_drive=None,
-                scale=(args_cli.object_scale, args_cli.object_scale, args_cli.object_scale),
-                collision_props=sim_utils.CollisionPropertiesCfg(
-                    collision_enabled=True,
-                    contact_offset=0.02,
-                    rest_offset=0.0,
-                ),
-                rigid_props=sim_utils.RigidBodyPropertiesCfg(
-                    disable_gravity=False,
-                    retain_accelerations=False,
-                    linear_damping=0.0,
-                    angular_damping=0.0,
-                    max_linear_velocity=1000.0,
-                    max_angular_velocity=1000.0,
-                    max_depenetration_velocity=5.0,
-                ),
-            ),
+            spawn=object_spawn_cfg,
         )
-        if args_cli.object_urdf is not None
+        if object_spawn_cfg is not None
         else None
     )
 
@@ -343,7 +357,7 @@ class ReplayMotionsSceneCfg(InteractiveSceneCfg):
 def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     # Extract scene entities
     robot: Articulation = scene["robot"]
-    object_asset: RigidObject | None = scene["object"] if args_cli.object_urdf is not None else None
+    object_asset: RigidObject | None = scene["object"] if (args_cli.object_usd is not None or args_cli.object_urdf is not None) else None
     # Define simulation stepping
     sim_dt = sim.get_physics_dt()
 
@@ -381,7 +395,9 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
             args_cli.human_pkl, sim.device
         )
     object_motion = ObjectMotionLoader(args_cli.object_motion_file, sim.device) if args_cli.object_motion_file is not None else None
-    assert (object_asset is None) == (object_motion is None), "--object_urdf and --object_motion_file must be provided together."
+    assert (object_asset is None) == (
+        object_motion is None
+    ), "--object_usd/--object_urdf and --object_motion_file must be provided together."
     time_steps = torch.zeros(scene.num_envs, dtype=torch.long, device=sim.device)
     time_step_total = motion.time_step_total if motion is not None else int(root_pos_seq.shape[0])
     level_rot = None

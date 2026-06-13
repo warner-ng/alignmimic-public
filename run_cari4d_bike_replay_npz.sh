@@ -15,6 +15,7 @@ REPLAY_ARGS=(
   --motion_quat_order xyzw
   --debug_marker_frames "${DEBUG_MARKER_FRAMES:-5}"
   --object_motion_file "${OBJECT_MOTION}"
+  --object_usd "${OBJECT_USD}"
   --object_urdf "${OBJECT_URDF}"
   --object_mesh "${OBJECT_MESH}"
   --object_scale "${OBJECT_SCALE}"
