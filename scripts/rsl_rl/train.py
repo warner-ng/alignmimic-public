@@ -35,6 +35,12 @@ parser.add_argument("--human_root_rot_offset_deg", nargs=3, type=float, default=
 parser.add_argument("--motion_global_rot_offset_deg", nargs=3, type=float, default=None, help="Pair-level global rpy offset.")
 parser.add_argument("--motion_global_pos_offset", nargs=3, type=float, default=None, help="Pair-level global xyz offset.")
 parser.add_argument(
+    "--disable_object_loading",
+    action="store_true",
+    default=False,
+    help="Disable HOI object spawn/motion/observation and keep only human tracking.",
+)
+parser.add_argument(
     "--start_at_zero_on_resample",
     action="store_true",
     default=False,
@@ -140,6 +146,15 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         env_cfg.commands.motion.motion_global_rot_offset_deg = tuple(args_cli.motion_global_rot_offset_deg)
     if args_cli.motion_global_pos_offset is not None:
         env_cfg.commands.motion.motion_global_pos_offset = tuple(args_cli.motion_global_pos_offset)
+    if args_cli.disable_object_loading:
+        env_cfg.scene.object = None
+        env_cfg.commands.motion.object_asset_name = None
+        env_cfg.commands.motion.object_motion_file = None
+        env_cfg.commands.motion.object_mesh_file = None
+        env_cfg.observations.policy.object_root_state = None
+        env_cfg.observations.critic.object_root_state = None
+        env_cfg.rewards.motion_object_point_cloud = None
+        env_cfg.terminations.object_far = None
     env_cfg.commands.motion.start_at_zero_on_resample = args_cli.start_at_zero_on_resample
 
     # specify directory for logging experiments
