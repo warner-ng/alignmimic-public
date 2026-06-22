@@ -1,0 +1,35 @@
+__pycache__/
+*.py[cod]
+
+.venv/
+venv/
+env/
+
+.DS_Store
+
+logs/
+outputs/
+wandb/
+
+data/
+generated-videos.zip
+
+# Local inputs and generated pipeline outputs
+*.mov
+*.mp4
+masks/
+meshes/
+packed/
+output/
+
+# External dependencies linked or cloned locally
+VolumetricSMPL
+experiments
+sapiens
+sam3/
+unidepth
+weights
+
+# Local run helpers/backups
+sitecustomize.py
+*.bak

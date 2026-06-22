@@ -40,5 +40,29 @@ _build
 *.zarr
 *.npz
 
-**/assets/
-artifacts/
+# Repo-local generated assets
+/assets/
+/datasets/
+/artifacts/
+
+# Third-party CARI4D generated data and local runtime state
+/third_party/cari4d_clean/.git/
+/third_party/cari4d_clean/.codex/
+/third_party/cari4d_clean/.agents/
+/third_party/cari4d_clean/.wheelhouse/
+/third_party/cari4d_clean/**/__pycache__/
+/third_party/cari4d_clean/*.mov
+/third_party/cari4d_clean/*.mp4
+/third_party/cari4d_clean/*.log
+/third_party/cari4d_clean/__okay__output/
+/third_party/cari4d_clean/behave_data/
+/third_party/cari4d_clean/data/
+/third_party/cari4d_clean/experiments/
+/third_party/cari4d_clean/masks/
+/third_party/cari4d_clean/meshes/
+/third_party/cari4d_clean/output/
+/third_party/cari4d_clean/packed/
+/third_party/cari4d_clean/sapiens/
+/third_party/cari4d_clean/unidepth/
+/third_party/cari4d_clean/VolumetricSMPL/
+/third_party/cari4d_clean/weights/
