@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Non-physics viser playback for ResMimic-retargeted G1 bike HOI motions."""
+"""Non-physics viser playback for G1 bike HOI motions."""
 
 from __future__ import annotations
 
@@ -25,16 +25,16 @@ sys.modules.setdefault("numpy._core.numeric", np.core.numeric)
 
 DEFAULT_TAG = "Date03_Sub01_bike_May_31_19_34"
 DEFAULT_PAIR_SUFFIX = "bikez"
-DEFAULT_RESMIMIC_ROOT = "/home/warner/_projects/ResMimic"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HUMAN_MOTION = (
-    f"{DEFAULT_RESMIMIC_ROOT}/assets/motions/{DEFAULT_TAG}_human_upright_{DEFAULT_PAIR_SUFFIX}_aligned.pkl"
+    f"{PROJECT_ROOT}/artifacts/{DEFAULT_TAG}_motions/{DEFAULT_TAG}_human_upright_{DEFAULT_PAIR_SUFFIX}_aligned.pkl"
 )
 DEFAULT_OBJECT_MOTION = (
-    f"{DEFAULT_RESMIMIC_ROOT}/assets/motions/{DEFAULT_TAG}_object_upright_{DEFAULT_PAIR_SUFFIX}_aligned.npz"
+    f"{PROJECT_ROOT}/artifacts/{DEFAULT_TAG}_motions/{DEFAULT_TAG}_object_upright_{DEFAULT_PAIR_SUFFIX}_aligned.npz"
 )
-DEFAULT_ROBOT_URDF = f"{DEFAULT_RESMIMIC_ROOT}/assets/g1/g1_custom_collision_29dof.urdf"
-DEFAULT_OBJECT_URDF = f"{DEFAULT_RESMIMIC_ROOT}/assets/bicycle_top_tube/bikered.urdf"
-DEFAULT_OBJECT_MESH = f"{DEFAULT_RESMIMIC_ROOT}/assets/bikered.stl"
+DEFAULT_ROBOT_URDF = f"{PROJECT_ROOT}/assets/g1_vis/g1_custom_collision_29dof.urdf"
+DEFAULT_OBJECT_URDF = f"{PROJECT_ROOT}/assets/bike_cari4d/bicycle_top_tube/bikered.urdf"
+DEFAULT_OBJECT_MESH = f"{PROJECT_ROOT}/assets/bike_cari4d/bikered.stl"
 
 
 def xyzw_to_wxyz(q_xyzw: np.ndarray) -> np.ndarray:
@@ -329,7 +329,7 @@ def start_playback(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Non-physics viser preview for ResMimic G1 bike HOI.")
+    parser = argparse.ArgumentParser(description="Non-physics viser preview for G1 bike HOI.")
     parser.add_argument("--human", default=DEFAULT_HUMAN_MOTION)
     parser.add_argument("--object", default=DEFAULT_OBJECT_MOTION)
     parser.add_argument("--robot-urdf", default=DEFAULT_ROBOT_URDF)

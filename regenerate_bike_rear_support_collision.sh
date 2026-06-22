@@ -2,12 +2,16 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RESMIMIC_ROOT="${RESMIMIC_ROOT:-/home/warner/_projects/ResMimic}"
-URDF="${URDF:-$RESMIMIC_ROOT/assets/bicycle_top_tube/bikered.urdf}"
-BASE_MESH="${BASE_MESH:-$RESMIMIC_ROOT/assets/bikered.stl}"
-OUTPUT_MESH="${OUTPUT_MESH:-$RESMIMIC_ROOT/assets/bikered_with_rear_support_collision.stl}"
-KEEP_SUPPORT_ONLY_MESH="${KEEP_SUPPORT_ONLY_MESH:-$RESMIMIC_ROOT/assets/bikered_rear_support_only_collision.stl}"
-OUTPUT_USD="${OUTPUT_USD:-$RESMIMIC_ROOT/assets/bicycle_top_tube/bikered_rigid_compound.usd}"
+CONFIG_SCRIPT="${CONFIG_SCRIPT:-$ROOT_DIR/run_cari4d_bike_data_preparation.sh}"
+[[ -f "$CONFIG_SCRIPT" ]] || { echo "[ERROR] missing CONFIG_SCRIPT=$CONFIG_SCRIPT" >&2; exit 1; }
+RUN_MODE=config source "$CONFIG_SCRIPT"
+
+LOCAL_ASSETS_DIR="${LOCAL_ASSETS_DIR:-$ROOT_DIR/assets}"
+URDF="${URDF:-${OBJECT_URDF:-$LOCAL_ASSETS_DIR/bike_cari4d/bicycle_top_tube/bikered.urdf}}"
+BASE_MESH="${BASE_MESH:-$LOCAL_ASSETS_DIR/bike_cari4d/bikered.stl}"
+OUTPUT_MESH="${OUTPUT_MESH:-${OBJECT_MESH:-$LOCAL_ASSETS_DIR/bike_cari4d/bikered_with_rear_support_collision.stl}}"
+KEEP_SUPPORT_ONLY_MESH="${KEEP_SUPPORT_ONLY_MESH:-$LOCAL_ASSETS_DIR/bike_cari4d/bikered_rear_support_only_collision.stl}"
+OUTPUT_USD="${OUTPUT_USD:-${OBJECT_USD:-$LOCAL_ASSETS_DIR/bike_cari4d/bicycle_top_tube/bikered_rigid_compound.usd}}"
 USD_BUILD_DIR="${USD_BUILD_DIR:-/tmp/bikered_rigid_compound_build}"
 BIKE_MESH_COLLISION_APPROXIMATION="${BIKE_MESH_COLLISION_APPROXIMATION:-convexDecomposition}"
 

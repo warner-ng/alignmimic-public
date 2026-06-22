@@ -186,7 +186,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         def video_step_trigger(step):
             should_record = step % video_interval == video_trigger_offset
             if should_record:
-                command = env.unwrapped.command_manager.get_term("motion")
+                command = env.unwrapped.command_manager.get_term("motion") # type: ignore
                 env_ids = torch.tensor([0], device=command.device)
                 command.cfg.start_at_zero_on_resample = True
                 command._resample_command(env_ids)
@@ -245,6 +245,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
 if __name__ == "__main__":
     # run the main function
-    main()
+    main() # type: ignore
     # close sim app
     simulation_app.close()

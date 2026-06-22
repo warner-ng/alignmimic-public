@@ -4,6 +4,7 @@ from isaaclab.assets import RigidObjectCfg
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import TerminationTermCfg as DoneTerm
+from pathlib import Path
 
 from whole_body_tracking.robots.g1 import G1_ACTION_SCALE, G1_CYLINDER_CFG
 from whole_body_tracking.tasks.tracking.config.g1.agents.rsl_rl_ppo_cfg import LOW_FREQ_SCALE
@@ -11,12 +12,14 @@ from whole_body_tracking.tasks.tracking.tracking_env_cfg import TrackingEnvCfg
 import whole_body_tracking.tasks.tracking.mdp as mdp
 
 
-BIKE_URDF = "/home/warner/_projects/ResMimic/assets/bicycle_top_tube/bikered.urdf"
-BIKE_USD = "/home/warner/_projects/ResMimic/assets/bicycle_top_tube/bikered_rigid_compound.usd"
-BIKE_MESH = "/home/warner/_projects/ResMimic/assets/bikered.stl"
+PROJECT_ROOT = Path(__file__).resolve().parents[7]
+BIKE_URDF = str(PROJECT_ROOT / "assets/bike_cari4d/bicycle_top_tube/bikered.urdf")
+BIKE_USD = str(PROJECT_ROOT / "assets/bike_cari4d/bicycle_top_tube/bikered_rigid_compound.usd")
+BIKE_MESH = str(PROJECT_ROOT / "assets/bike_cari4d/bikered.stl")
 BIKE_OBJECT_MOTION = (
-    "/home/warner/_projects/ResMimic/assets/motions/"
-    "Date03_Sub01_bike_May_31_19_34_object_upright_bikez_aligned.npz"
+    str(PROJECT_ROOT)
+    + "/artifacts/Date03_Sub01_bike_May_31_19_34_motions/"
+    + "Date03_Sub01_bike_May_31_19_34_object_upright_bikez_aligned.npz"
 )
 
 
@@ -108,7 +111,7 @@ class G1FlatBikeHOIEnvCfg(G1FlatEnvCfg):
             func=mdp.object_root_state_w, params={"command_name": "motion"}
         )
         # self.rewards.undesired_contacts = None
-        # point cloud reward, added from resmimic by warner
+        # point cloud reward for object tracking
         self.rewards.motion_object_point_cloud = RewTerm(
             func=mdp.motion_object_point_cloud_error_exp,
             weight=2.0,

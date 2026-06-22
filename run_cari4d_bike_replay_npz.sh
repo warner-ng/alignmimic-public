@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-RUN_MODE=config source "$ROOT_DIR/run_cari4d_bike_train.sh"
+RUN_MODE=config source "$ROOT_DIR/run_cari4d_bike_data_preparation.sh"
 
 source /mnt/projects_ext4/conda/miniconda3/etc/profile.d/conda.sh
 conda activate beyondmimic
@@ -11,7 +11,7 @@ conda activate beyondmimic
 REPLAY_ARGS=(
   scripts/replay_npz.py
   --motion_file "${HUMAN_MOTION}"
-  --human_pkl "${RESMIMIC_HUMAN_MOTION}"
+  --human_pkl "${HUMAN_PKL}"
   --motion_quat_order xyzw
   --debug_marker_frames "${DEBUG_MARKER_FRAMES:-5}"
   --object_motion_file "${OBJECT_MOTION}"

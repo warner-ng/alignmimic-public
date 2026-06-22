@@ -20,7 +20,7 @@ from isaaclab.app import AppLauncher
 parser = argparse.ArgumentParser(description="Replay converted motions.")
 parser.add_argument("--registry_name", type=str, default=None, help="The name of the wand registry.")
 parser.add_argument("--motion_file", type=str, default=None, help="Local human motion.npz path.")
-parser.add_argument("--human_pkl", type=str, default=None, help="ResMimic-style human motion .pkl path.")
+parser.add_argument("--human_pkl", type=str, default=None, help="G1 human motion .pkl path.")
 parser.add_argument("--motion_quat_order", choices=("wxyz", "xyzw"), default="wxyz", help="Human motion quaternion order.")
 parser.add_argument("--object_motion_file", type=str, default=None, help="Optional object motion .npz path.")
 parser.add_argument("--object_urdf", type=str, default=None, help="Optional object URDF path.")

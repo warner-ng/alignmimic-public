@@ -2,6 +2,21 @@
 
 # see data/videogen for the actual preparation result of your custom data
 #  It works best when both the person and object are mostly visible
+#
+# Local flat_bike run parameters:
+# - input video: ${PROJECT_ROOT}/flat_bike.mov
+# - SAM3 prompts: human="person", object="bicycle", chunk_size=300
+# - Hunyuan3D reference frame: 330
+# - pipeline sequence: Flat_Sub01_bike, camera id: 0, wild_video=True
+# - runtime: docker container "cari4d"; CUDA_VISIBLE_DEVICES inherited by caller
+# - Step 4.4 depth alignment render_chunk_size=8
+# - Step 4.5/4.6 render batch=8, model batch=128, score model batch unset
+# - Step 4.6 FoundationPose: --viz_path x, kid=0, FP_ANGULAR_VELO=2.5, FP_OCC_FRAMES_ALLOWED=15, FP_MAX_ATTEMPTS=5
+# - Step 4.7 CoCoNet: config=learning/configs/cari4d-release.yml, checkpoint=experiments/cari4d-release/step031397.pth, clip_len/window=90
+# - Step 4.8 opt: num_steps=500, batch_size=64, lr=0.001, save_name=optv2
+# - Step 4.8 losses: w_acc_v=600, w_contact=300 then 200.0, w_temp=1000, w_sil=0.002, w_pen=2.0, w_j2d=0.03
+# - Step 4.8 flags: opt_rot=True, opt_trans=True, opt_smpl_trans=False, opt_betas=False, use_input=True
+# - Step 4.8 env: PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True, CARI4D_OPT_VIZ_BATCH=64
 
 set -euo pipefail
 
@@ -389,7 +404,7 @@ echo "=== Step 4.8: run joint optimization ==="
 if [[ -f "${PIPELINE_OPT_OUT}" ]]; then
   echo "Skip joint optimization: ${PIPELINE_OPT_OUT} already exists"
 else
-  run_pipeline_cmd env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True CARI4D_OPT_VIZ_BATCH="${OPT_VIZ_BATCH}" python learning/training/opt_refineout.py num_steps=3000 w_acc_v=600 w_contact=300 save_name=optv2 batch_size=64 opt_rot=True \
+  run_pipeline_cmd env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True CARI4D_OPT_VIZ_BATCH="${OPT_VIZ_BATCH}" python learning/training/opt_refineout.py num_steps=500 w_acc_v=600 w_contact=300 save_name=optv2 batch_size=64 opt_rot=True \
     opt_trans=True w_temp="${OPT_TEMP_WEIGHT}" w_sil=0.002 w_contact=200.0 w_pen=2.0 w_j2d=0.03 opt_smpl_trans=False opt_betas=False \
     pth_file="${PIPELINE_COCONET_PTH}" wild_video=True use_input=True \
     video_root="$(dirname "${PIPELINE_ALIGNED_VIDEO}")" \
